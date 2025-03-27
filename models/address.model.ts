@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -27,6 +27,14 @@ class AddressModel {
         id: id,
       },
       data: data,
+    });
+  }
+
+  async deleteAddress(id: string) {
+    return await prisma.address.delete({
+      where: {
+        id: id,
+      },
     });
   }
 }

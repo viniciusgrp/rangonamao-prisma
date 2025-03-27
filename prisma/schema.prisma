@@ -42,9 +42,11 @@ model Address {
 
 model Store {
     id          String   @id @default(cuid())
-    url         String
+    url         String   @unique
     name        String
     description String
+    color       String?
+    background  String?
     street      String
     city        String
     state       String
@@ -63,9 +65,9 @@ model Category {
     description String
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
-    storeId     String
+    storeUrl    String
 
-    store   Store     @relation(fields: [storeId], references: [id])
+    store   Store     @relation(fields: [storeUrl], references: [url])
     Product Product[]
 }
 
@@ -79,10 +81,10 @@ model Product {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
-    Category Category @relation(fields: [categoryId], references: [id])
-    Store    Store    @relation(fields: [storeId], references: [id])
-
-    Order Order[]
+    category    Category            @relation(fields: [categoryId], references: [id])
+    store       Store               @relation(fields: [storeId], references: [id])
+    orders      OrderProduct[]
+    ingredients ProductIngredient[]
 }
 
 model Order {
@@ -92,7 +94,38 @@ model Order {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    User     User      @relation(fields: [userId], references: [userId])
-    Store    Store     @relation(fields: [storeId], references: [id])
-    Products Product[]
+    user     User           @relation(fields: [userId], references: [userId])
+    store    Store          @relation(fields: [storeId], references: [id])
+    products OrderProduct[]
+}
+
+model OrderProduct {
+    orderId   String
+    productId String
+    quantity  Int    @default(1)
+
+    order   Order   @relation(fields: [orderId], references: [id])
+    product Product @relation(fields: [productId], references: [id])
+
+    @@id([orderId, productId])
+}
+
+model Ingredient {
+    id          String   @id @default(cuid())
+    name        String
+    description String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    products ProductIngredient[]
+}
+
+model ProductIngredient {
+    productId    String
+    ingredientId String
+
+    product    Product    @relation(fields: [productId], references: [id])
+    ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+    @@id([productId, ingredientId])
 }
