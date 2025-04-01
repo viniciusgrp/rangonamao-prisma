@@ -21,6 +21,14 @@ class UserModel {
     });
   }
 
+  async getUserByEmail(email: string) {
+    return await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+  }
+
   async updateUser(userId: string, data: any) {
     return await prisma.user.update({
       where: {

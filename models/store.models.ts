@@ -21,6 +21,14 @@ class StoreModel {
     });
   }
 
+  async getStoreByEmail(email: string) {
+    return await prisma.store.findFirst({
+      where: {
+        email: email,
+      },
+    });
+  }
+
   async updateStore(id: string, data: any) {
     return await prisma.store.update({
       where: {
