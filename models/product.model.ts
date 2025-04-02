@@ -1,57 +1,68 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 class ProductModel {
-  async createProduct(data: any) {
-    const { ingredients, categoryId, storeId, ...productData } = data;
-    
-    return await prisma.product.create({
+  async createProduct(data: {
+    name: string;
+    description: string;
+    price: number;
+    categoryId: string;
+    image?: string;
+    storeId: string;
+  }) {
+    // Verifica se a categoria pertence à loja
+    const category = await prisma.category.findUnique({
+      where: { id: data.categoryId },
+      include: { store: true },
+    });
+
+    if (!category || category.store.id !== data.storeId) {
+      throw new Error('Category not found or does not belong to the store');
+    }
+
+    return prisma.product.create({
       data: {
-        ...productData,
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        image: data.image,
         category: {
-          connect: { id: categoryId }
+          connect: {
+            id: data.categoryId,
+          },
         },
-        store: {
-          connect: { id: storeId }
-        },
-        ingredients: {
-          create: ingredients?.map((ingredient: any) => ({
-            ingredient: {
-              create: {
-                name: ingredient.name,
-                description: ingredient.description
-              }
-            }
-          })) || []
-        }
       },
-      include: {
-        category: true,
-        store: true,
-        ingredients: {
-          include: {
-            ingredient: true
-          }
-        }
-      }
     });
   }
 
   async getProducts() {
-    return await prisma.product.findMany();
+    return prisma.product.findMany({
+      include: {
+        category: true,
+        ingredients: {
+          include: {
+            ingredient: true,
+          },
+        },
+      },
+    });
   }
 
-  async updateProduct(id: string, data: any) {
-    return await prisma.product.update({
-      where: { id: id },
-      data: data,
+  async updateProduct(id: string, data: {
+    name: string;
+    description: string;
+    price: number;
+    categoryId: string;
+    image?: string;
+  }) {
+    return prisma.product.update({
+      where: { id },
+      data,
     });
   }
 
   async deleteProduct(id: string) {
-    return await prisma.product.delete({
-      where: { id: id },
+    return prisma.product.delete({
+      where: { id },
     });
   }
 }

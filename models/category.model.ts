@@ -1,43 +1,40 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 class CategoryModel {
-  async createCategory(data: any) {
-    return await prisma.category.create({
-      data: data,
-    });
-  }
-
-  async getCategories(storeUrl: string) {
-    return await prisma.category.findMany({
-      where: {
+  async createCategory(data: { name: string; description: string; storeId: string }) {
+    return prisma.category.create({
+      data: {
+        name: data.name,
+        description: data.description,
         store: {
-          url: storeUrl,
-        },
-      },
-      include: {
-        Product: {
-          include: {
-            ingredients: {
-              include: { ingredient: true },
-            },
+          connect: {
+            id: data.storeId,
           },
         },
       },
     });
   }
 
-  async updateCategory(id: string, data: any) {
-    return await prisma.category.update({
-      where: { id: id },
-      data: data,
+  async getCategoriesByStore(storeId: string) {
+    return prisma.category.findMany({
+      where: {
+        store: {
+          id: storeId,
+        },
+      },
+    });
+  }
+
+  async updateCategory(id: string, data: { name: string; description: string }) {
+    return prisma.category.update({
+      where: { id },
+      data,
     });
   }
 
   async deleteCategory(id: string) {
-    return await prisma.category.delete({
-      where: { id: id },
+    return prisma.category.delete({
+      where: { id },
     });
   }
 }

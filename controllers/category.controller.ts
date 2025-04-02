@@ -1,28 +1,91 @@
-import { Request, Response } from 'express';
-import CategoryModel from '../models/category.model';
+import { Response } from 'express';
+import { prisma } from '../lib/prisma.js';
+import { AuthenticatedRequest } from '../types/middleware';
+import { ControllerFunction } from '../types/controller';
 
-class CategoryController {
-  async createCategory(req: Request, res: Response) {
-    const category = await CategoryModel.createCategory(req.body);
-    res.status(201).json(category);
-  }
+const CategoryController = {
+  createCategory: (async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { name, description, storeId } = req.body;
 
-  async getCategories(req: Request, res: Response) {
-    const storeId = req.params.storeId;
+      const category = await prisma.category.create({
+        data: {
+          name,
+          description,
+          storeId,
+        },
+      });
 
-    const categories = await CategoryModel.getCategories(storeId);
-    res.status(200).json(categories);
-  }
+      res.status(201).json(category);
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }) as ControllerFunction,
 
-  async updateCategory(req: Request, res: Response) {
-    const category = await CategoryModel.updateCategory(req.params.id, req.body);
-    res.status(200).json(category);
-  }
+  getCategoriesByStore: (async (req: AuthenticatedRequest, res: Response) => {
+    const { storeId } = req.params;
 
-  async deleteCategory(req: Request, res: Response) {
-    const category = await CategoryModel.deleteCategory(req.params.id);
-    res.status(200).json(category);
-  }
-}
+    try {
+      const categories = await prisma.category.findMany({
+        where: { storeId },
+      });
 
-export default new CategoryController();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }) as ControllerFunction,
+
+  updateCategory: (async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    try {
+      const category = await prisma.category.findUnique({
+        where: { id },
+      });
+
+      if (!category) {
+        res.status(404).json({ error: 'Category not found' });
+        return;
+      }
+
+      const updatedCategory = await prisma.category.update({
+        where: { id },
+        data: {
+          name,
+          description,
+        },
+      });
+
+      res.json(updatedCategory);
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }) as ControllerFunction,
+
+  deleteCategory: (async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+
+    try {
+      const category = await prisma.category.findUnique({
+        where: { id },
+      });
+
+      if (!category) {
+        res.status(404).json({ error: 'Category not found' });
+        return;
+      }
+
+      await prisma.category.delete({
+        where: { id },
+      });
+
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }) as ControllerFunction,
+};
+
+export default CategoryController;

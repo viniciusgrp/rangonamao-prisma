@@ -31,8 +31,14 @@ CREATE TABLE "Address" (
 CREATE TABLE "Store" (
     "id" TEXT NOT NULL,
     "url" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
+    "logo" TEXT,
+    "phone" TEXT,
+    "color" TEXT,
+    "background" TEXT,
     "street" TEXT NOT NULL,
     "city" TEXT NOT NULL,
     "state" TEXT NOT NULL,
@@ -50,7 +56,7 @@ CREATE TABLE "Category" (
     "description" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "storeId" TEXT NOT NULL,
+    "storeUrl" TEXT NOT NULL,
 
     CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
 );
@@ -62,9 +68,9 @@ CREATE TABLE "Product" (
     "description" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "categoryId" TEXT NOT NULL,
-    "storeId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "image" TEXT,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );
@@ -81,11 +87,31 @@ CREATE TABLE "Order" (
 );
 
 -- CreateTable
-CREATE TABLE "_OrderToProduct" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL,
+CREATE TABLE "OrderProduct" (
+    "orderId" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "quantity" INTEGER NOT NULL DEFAULT 1,
 
-    CONSTRAINT "_OrderToProduct_AB_pkey" PRIMARY KEY ("A","B")
+    CONSTRAINT "OrderProduct_pkey" PRIMARY KEY ("orderId","productId")
+);
+
+-- CreateTable
+CREATE TABLE "Ingredient" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Ingredient_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProductIngredient" (
+    "productId" TEXT NOT NULL,
+    "ingredientId" TEXT NOT NULL,
+
+    CONSTRAINT "ProductIngredient_pkey" PRIMARY KEY ("productId","ingredientId")
 );
 
 -- CreateIndex
@@ -95,19 +121,19 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "User_cpf_key" ON "User"("cpf");
 
 -- CreateIndex
-CREATE INDEX "_OrderToProduct_B_index" ON "_OrderToProduct"("B");
+CREATE UNIQUE INDEX "Store_url_key" ON "Store"("url");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Store_email_key" ON "Store"("email");
 
 -- AddForeignKey
 ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Category" ADD CONSTRAINT "Category_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Category" ADD CONSTRAINT "Category_storeUrl_fkey" FOREIGN KEY ("storeUrl") REFERENCES "Store"("url") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Product" ADD CONSTRAINT "Product_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -116,7 +142,13 @@ ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") RE
 ALTER TABLE "Order" ADD CONSTRAINT "Order_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_OrderToProduct" ADD CONSTRAINT "_OrderToProduct_A_fkey" FOREIGN KEY ("A") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "OrderProduct" ADD CONSTRAINT "OrderProduct_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_OrderToProduct" ADD CONSTRAINT "_OrderToProduct_B_fkey" FOREIGN KEY ("B") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "OrderProduct" ADD CONSTRAINT "OrderProduct_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProductIngredient" ADD CONSTRAINT "ProductIngredient_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProductIngredient" ADD CONSTRAINT "ProductIngredient_ingredientId_fkey" FOREIGN KEY ("ingredientId") REFERENCES "Ingredient"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -58,7 +58,6 @@ model Store {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
-    Product  Product[]
     Category Category[]
     Order    Order[]
 }
@@ -69,9 +68,9 @@ model Category {
     description String
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
-    storeUrl    String
+    storeId     String
 
-    store   Store     @relation(fields: [storeUrl], references: [url])
+    store   Store     @relation(fields: [storeId], references: [id])
     Product Product[]
 }
 
@@ -81,13 +80,11 @@ model Product {
     description String
     price       Float
     categoryId  String
-    storeId     String
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
     image       String?
 
     category    Category            @relation(fields: [categoryId], references: [id])
-    store       Store               @relation(fields: [storeId], references: [id])
     orders      OrderProduct[]
     ingredients ProductIngredient[]
 }
@@ -105,14 +102,16 @@ model Order {
 }
 
 model OrderProduct {
+    id        String   @id @default(cuid())
     orderId   String
     productId String
-    quantity  Int    @default(1)
+    quantity  Int
+    price     Float
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
     order   Order   @relation(fields: [orderId], references: [id])
     product Product @relation(fields: [productId], references: [id])
-
-    @@id([orderId, productId])
 }
 
 model Ingredient {
@@ -126,11 +125,12 @@ model Ingredient {
 }
 
 model ProductIngredient {
+    id           String     @id @default(cuid())
     productId    String
     ingredientId String
+    createdAt    DateTime   @default(now())
+    updatedAt    DateTime   @updatedAt
 
     product    Product    @relation(fields: [productId], references: [id])
     ingredient Ingredient @relation(fields: [ingredientId], references: [id])
-
-    @@id([productId, ingredientId])
 }

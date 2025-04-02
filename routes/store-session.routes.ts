@@ -1,14 +1,14 @@
 import { Router } from 'express';
-import SessionController from '../controllers/session.controller';
+import StoreSessionController from '../controllers/store-session.controller';
 
 const router = Router();
 
 /**
  * @swagger
- * /auth/login:
+ * /store-auth/login:
  *   post:
- *     summary: Realiza login do usuário
- *     tags: [Auth]
+ *     summary: Login da loja
+ *     tags: [Store Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -21,12 +21,10 @@ const router = Router();
  *             properties:
  *               email:
  *                 type: string
- *                 format: email
- *                 description: Email do usuário
+ *                 description: Email da loja
  *               password:
  *                 type: string
- *                 format: password
- *                 description: Senha do usuário
+ *                 description: Senha da loja
  *     responses:
  *       200:
  *         description: Login realizado com sucesso
@@ -37,8 +35,8 @@ const router = Router();
  *               properties:
  *                 token:
  *                   type: string
- *                   description: Token JWT de autenticação
- *                 user:
+ *                   description: JWT token para autenticação
+ *                 store:
  *                   type: object
  *                   properties:
  *                     id:
@@ -47,11 +45,11 @@ const router = Router();
  *                       type: string
  *                     email:
  *                       type: string
+ *                     url:
+ *                       type: string
  *       401:
  *         description: Credenciais inválidas
  */
-router.post('/login', SessionController.createSession);
+router.post('/login', StoreSessionController.login);
 
-export default router;
-
-
+export default router; 
