@@ -1,76 +1,97 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../lib/prisma.js';
-import { MiddlewareFunction, AuthenticatedRequest } from '../types/middleware';
+import { prisma } from '../lib/prisma';
+import { AuthenticatedRequest } from '../types/middleware';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 interface StoreTokenPayload {
   storeId: string;
-  email: string;
+  email?: string;
 }
 
-export const authenticateStore: MiddlewareFunction = async (
+interface TokenPayload {
+  storeId: string;
+  iat: number;
+  exp: number;
+}
+
+export const authenticateStore = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    res.status(401).json({ error: 'Token not provided' });
+    res.status(401).json({ error: 'No token provided' });
     return;
   }
 
-  const [, token] = authHeader.split(' ');
+  const parts = authHeader.split(' ');
+
+  if (parts.length !== 2) {
+    res.status(401).json({ error: 'Token error' });
+    return;
+  }
+
+  const [scheme, token] = parts;
+
+  if (!/^Bearer$/i.test(scheme)) {
+    res.status(401).json({ error: 'Token malformatted' });
+    return;
+  }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as StoreTokenPayload;
-    req.storeId = decoded.storeId;
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string,
+    ) as TokenPayload;
+
+    const store = await prisma.store.findUnique({
+      where: { id: decoded.storeId },
+    });
+
+    if (!store) {
+      res.status(401).json({ error: 'Store not found' });
+      return;
+    }
+
+    req.storeId = store.id;
     next();
-  } catch (err) {
-    res.status(401).json({ error: 'Token invalid' });
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid token' });
   }
 };
 
-export const checkStoreOwnership: MiddlewareFunction = async (
+export const checkStoreOwnership = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  const { id } = req.params;
-  const storeId = req.storeId;
+  const { storeId } = req.params;
+  const authenticatedStoreId = req.storeId;
 
-  if (!storeId) {
+  if (!authenticatedStoreId) {
     res.status(401).json({ error: 'Store not authenticated' });
     return;
   }
 
-  try {
-    const store = await prisma.store.findUnique({
-      where: { id },
-    });
-
-    if (!store) {
-      res.status(404).json({ error: 'Store not found' });
-      return;
-    }
-
-    if (store.id !== storeId) {
-      res.status(403).json({ error: 'Not authorized to access this store' });
-      return;
-    }
-
-    next();
-  } catch (err) {
-    res.status(500).json({ error: 'Internal server error' });
+  if (storeId !== authenticatedStoreId) {
+    res.status(403).json({ error: 'Not authorized to access this store' });
+    return;
   }
+
+  next();
 };
 
-export const checkProductOwnership: MiddlewareFunction = async (
+export const checkProductOwnership = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  const { id } = req.params;
+  const { productId } = req.params;
   const storeId = req.storeId;
 
   if (!storeId) {
@@ -80,7 +101,7 @@ export const checkProductOwnership: MiddlewareFunction = async (
 
   try {
     const product = await prisma.product.findUnique({
-      where: { id },
+      where: { id: productId },
       include: { category: true },
     });
 
@@ -89,22 +110,13 @@ export const checkProductOwnership: MiddlewareFunction = async (
       return;
     }
 
-    const category = await prisma.category.findUnique({
-      where: { id: product.categoryId },
-    });
-
-    if (!category) {
-      res.status(404).json({ error: 'Category not found' });
-      return;
-    }
-
-    if (category.storeId !== storeId) {
+    if (product.category.storeId !== storeId) {
       res.status(403).json({ error: 'Not authorized to access this product' });
       return;
     }
 
     next();
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
-}; 
+};

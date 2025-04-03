@@ -1,156 +1,84 @@
 import { Response } from 'express';
-import { prisma } from '../lib/prisma.js';
+import ProductModel from '../models/product.models';
+import { productResponseSchema, productsResponseSchema } from '../schemas/product.schema';
 import { AuthenticatedRequest } from '../types/middleware';
 import { ControllerFunction } from '../types/controller';
 
 const ProductController = {
   createProduct: (async (req: AuthenticatedRequest, res: Response) => {
-    const { name, description, price, categoryId, image } = req.body;
-    const storeId = req.storeId;
-
-    if (!storeId) {
-      res.status(401).json({ error: 'Store not authenticated' });
-      return;
-    }
-
     try {
-      const category = await prisma.category.findUnique({
-        where: { id: categoryId },
-      });
+      const storeId = req.storeId;
 
-      if (!category) {
-        res.status(404).json({ error: 'Category not found' });
+      if (!storeId) {
+        res.status(401).json({ message: 'Store not authenticated' });
+
         return;
       }
 
-      if (category.storeId !== storeId) {
-        res.status(403).json({ error: 'Not authorized to create product in this category' });
-        return;
-      }
+      const product = await ProductModel.createProduct(req.body, storeId);
+      const validatedProduct = productResponseSchema.parse(product);
 
-      const product = await prisma.product.create({
-        data: {
-          name,
-          description,
-          price,
-          image,
-          categoryId,
-        },
-      });
-
-      res.status(201).json(product);
-    } catch (err) {
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(201).json(validatedProduct);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   }) as ControllerFunction,
 
   getProducts: (async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const products = await prisma.product.findMany({
-        include: {
-          category: true,
-        },
-      });
+      const products = await ProductModel.getProducts();
+      const validatedProducts = productsResponseSchema.parse(products);
 
-      res.json(products);
-    } catch (err) {
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(200).json(validatedProducts);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  }) as ControllerFunction,
+
+  getProductById: (async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const product = await ProductModel.getProductById(req.params.id);
+
+      if (!product) {
+        res.status(404).json({ message: 'Product not found' });
+
+        return;
+      }
+      const validatedProduct = productResponseSchema.parse(product);
+
+      res.status(200).json(validatedProduct);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   }) as ControllerFunction,
 
   updateProduct: (async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    const { name, description, price, categoryId, image } = req.body;
-    const storeId = req.storeId;
-
-    if (!storeId) {
-      res.status(401).json({ error: 'Store not authenticated' });
-      return;
-    }
-
     try {
-      const product = await prisma.product.findUnique({
-        where: { id },
-        include: { category: true },
-      });
+      const storeId = req.storeId;
 
-      if (!product) {
-        res.status(404).json({ error: 'Product not found' });
+      if (!storeId) {
+        res.status(401).json({ message: 'Store not authenticated' });
+
         return;
       }
 
-      const category = await prisma.category.findUnique({
-        where: { id: categoryId },
-      });
+      const product = await ProductModel.updateProduct(req.params.id, req.body, storeId);
+      const validatedProduct = productResponseSchema.parse(product);
 
-      if (!category) {
-        res.status(404).json({ error: 'Category not found' });
-        return;
-      }
-
-      if (category.storeId !== storeId) {
-        res.status(403).json({ error: 'Not authorized to update product in this category' });
-        return;
-      }
-
-      const updatedProduct = await prisma.product.update({
-        where: { id },
-        data: {
-          name,
-          description,
-          price,
-          image,
-          categoryId,
-        },
-      });
-
-      res.json(updatedProduct);
-    } catch (err) {
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(200).json(validatedProduct);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   }) as ControllerFunction,
 
   deleteProduct: (async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    const storeId = req.storeId;
-
-    if (!storeId) {
-      res.status(401).json({ error: 'Store not authenticated' });
-      return;
-    }
-
     try {
-      const product = await prisma.product.findUnique({
-        where: { id },
-        include: { category: true },
-      });
+      const product = await ProductModel.deleteProduct(req.params.id);
+      const validatedProduct = productResponseSchema.parse(product);
 
-      if (!product) {
-        res.status(404).json({ error: 'Product not found' });
-        return;
-      }
-
-      const category = await prisma.category.findUnique({
-        where: { id: product.categoryId },
-      });
-
-      if (!category) {
-        res.status(404).json({ error: 'Category not found' });
-        return;
-      }
-
-      if (category.storeId !== storeId) {
-        res.status(403).json({ error: 'Not authorized to delete this product' });
-        return;
-      }
-
-      await prisma.product.delete({
-        where: { id },
-      });
-
-      res.json(product);
-    } catch (err) {
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(200).json(validatedProduct);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   }) as ControllerFunction,
 };

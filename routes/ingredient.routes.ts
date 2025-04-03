@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import IngredientController from '../controllers/ingredient.controller';
+import { authenticateStore } from '../middleware/store-auth';
 
 const router = Router();
 
@@ -50,7 +51,7 @@ const router = Router();
  *       500:
  *         description: Internal server error
  */
-router.post('/',  IngredientController.createIngredient);
+router.post('/', authenticateStore, IngredientController.createIngredient);
 
 /**
  * @swagger
@@ -94,7 +95,7 @@ router.post('/',  IngredientController.createIngredient);
  *       500:
  *         description: Internal server error
  */
-router.get('/',  IngredientController.getIngredients);
+router.get('/', authenticateStore, IngredientController.getIngredients);
 
 /**
  * @swagger
@@ -145,7 +146,7 @@ router.get('/',  IngredientController.getIngredients);
  *       500:
  *         description: Internal server error
  */
-router.get('/:id',  IngredientController.getIngredientById);
+router.get('/:id', authenticateStore, IngredientController.getIngredientById);
 
 /**
  * @swagger
@@ -200,7 +201,7 @@ router.get('/:id',  IngredientController.getIngredientById);
  *       500:
  *         description: Internal server error
  */
-router.put('/:id',  IngredientController.updateIngredient);
+router.put('/:id', authenticateStore, IngredientController.updateIngredient);
 
 /**
  * @swagger
@@ -242,6 +243,6 @@ router.put('/:id',  IngredientController.updateIngredient);
  *       500:
  *         description: Internal server error
  */
-router.delete('/:id',  IngredientController.deleteIngredient);
+router.delete('/:id', authenticateStore, IngredientController.deleteIngredient);
 
-export default router; 
+export default router;

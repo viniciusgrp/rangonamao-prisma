@@ -1,98 +1,82 @@
-import { Response } from 'express';
-import { prisma } from '../lib/prisma.js';
+import { Request, Response } from 'express';
+import IngredientModel from '../models/ingredient.models';
+import { ingredientResponseSchema, ingredientsResponseSchema } from '../schemas/ingredient.schema';
 import { AuthenticatedRequest } from '../types/middleware';
 import { ControllerFunction } from '../types/controller';
 
 const IngredientController = {
   createIngredient: (async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { name, description } = req.body;
+      const storeId = req.storeId;
 
-      const ingredient = await prisma.ingredient.create({
-        data: {
-          name,
-          description,
-        },
-      });
+      if (!storeId) {
+        res.status(401).json({ message: 'Store not authenticated' });
 
-      res.status(201).json(ingredient);
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }) as ControllerFunction,
-
-  getIngredientById: (async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-
-    try {
-      const ingredient = await prisma.ingredient.findUnique({
-        where: { id },
-        include: {
-          products: true,
-        },
-      });
-
-      if (!ingredient) {
-        res.status(404).json({ error: 'Ingredient not found' });
         return;
       }
 
-      res.json(ingredient);
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
+      const ingredient = await IngredientModel.createIngredient({
+        ...req.body,
+        storeId,
+        price: req.body.price || 0,
+      });
+      const validatedIngredient = ingredientResponseSchema.parse(ingredient);
+
+      res.status(201).json(validatedIngredient);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   }) as ControllerFunction,
 
-  updateIngredient: (async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    const { name, description } = req.body;
-
+  getIngredients: (async (req: Request, res: Response) => {
     try {
-      const ingredient = await prisma.ingredient.findUnique({
-        where: { id },
-      });
+      const ingredients = await IngredientModel.getIngredients();
+      const validatedIngredients = ingredientsResponseSchema.parse(ingredients);
 
-      if (!ingredient) {
-        res.status(404).json({ error: 'Ingredient not found' });
-        return;
-      }
-
-      const updatedIngredient = await prisma.ingredient.update({
-        where: { id },
-        data: {
-          name,
-          description,
-        },
-      });
-
-      res.json(updatedIngredient);
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(200).json(validatedIngredients);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   }) as ControllerFunction,
 
-  deleteIngredient: (async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-
+  getIngredientById: (async (req: Request, res: Response) => {
     try {
-      const ingredient = await prisma.ingredient.findUnique({
-        where: { id },
-      });
+      const ingredient = await IngredientModel.getIngredientById(req.params.id);
 
       if (!ingredient) {
-        res.status(404).json({ error: 'Ingredient not found' });
+        res.status(404).json({ message: 'Ingredient not found' });
+
         return;
       }
+      const validatedIngredient = ingredientResponseSchema.parse(ingredient);
 
-      await prisma.ingredient.delete({
-        where: { id },
-      });
+      res.status(200).json(validatedIngredient);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  }) as ControllerFunction,
 
-      res.json(ingredient);
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
+  updateIngredient: (async (req: Request, res: Response) => {
+    try {
+      const ingredient = await IngredientModel.updateIngredient(req.params.id, req.body);
+      const validatedIngredient = ingredientResponseSchema.parse(ingredient);
+
+      res.status(200).json(validatedIngredient);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  }) as ControllerFunction,
+
+  deleteIngredient: (async (req: Request, res: Response) => {
+    try {
+      const ingredient = await IngredientModel.deleteIngredient(req.params.id);
+      const validatedIngredient = ingredientResponseSchema.parse(ingredient);
+
+      res.status(200).json(validatedIngredient);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   }) as ControllerFunction,
 };
 
-export default IngredientController; 
+export default IngredientController;

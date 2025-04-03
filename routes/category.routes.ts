@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import CategoryController from '../controllers/category.controller';
+import { authenticateStore } from '../middleware/store-auth';
+
 const router = Router();
 
 /**
@@ -49,7 +51,7 @@ const router = Router();
  *       500:
  *         description: Internal server error
  */
-router.post('/',  CategoryController.createCategory);
+router.post('/', authenticateStore, CategoryController.createCategory);
 
 /**
  * @swagger
@@ -144,7 +146,7 @@ router.get('/:storeId', CategoryController.getCategoriesByStore);
  *       500:
  *         description: Internal server error
  */
-router.put('/:id', CategoryController.updateCategory);
+router.put('/:id', authenticateStore, CategoryController.updateCategory);
 
 /**
  * @swagger
@@ -186,6 +188,6 @@ router.put('/:id', CategoryController.updateCategory);
  *       500:
  *         description: Internal server error
  */
-router.delete('/:id', CategoryController.deleteCategory);
+router.delete('/:id', authenticateStore, CategoryController.deleteCategory);
 
 export default router;

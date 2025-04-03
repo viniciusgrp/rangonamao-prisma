@@ -8,14 +8,16 @@ class IngredientModel {
       data: {
         name: data.name,
         description: data.description,
+        price: data.price || 0,
+        storeId: data.storeId,
       },
       include: {
         products: {
           include: {
-            product: true
-          }
-        }
-      }
+            product: true,
+          },
+        },
+      },
     });
   }
 
@@ -24,10 +26,10 @@ class IngredientModel {
       include: {
         products: {
           include: {
-            product: true
-          }
-        }
-      }
+            product: true,
+          },
+        },
+      },
     });
   }
 
@@ -37,10 +39,10 @@ class IngredientModel {
       include: {
         products: {
           include: {
-            product: true
-          }
-        }
-      }
+            product: true,
+          },
+        },
+      },
     });
   }
 
@@ -54,10 +56,10 @@ class IngredientModel {
       include: {
         products: {
           include: {
-            product: true
-          }
-        }
-      }
+            product: true,
+          },
+        },
+      },
     });
   }
 
@@ -67,12 +69,12 @@ class IngredientModel {
       include: {
         products: {
           include: {
-            product: true
-          }
-        }
-      }
+            product: true,
+          },
+        },
+      },
     });
   }
 }
 
-export default new IngredientModel(); 
+export default new IngredientModel();

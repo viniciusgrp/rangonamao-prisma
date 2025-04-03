@@ -1,47 +1,69 @@
 import { Request, Response } from 'express';
 import UserModel from '../models/user.models';
-import { hashSync } from 'bcrypt'
+import { userResponseSchema, usersResponseSchema } from '../schemas/user.schema';
+import { ControllerFunction } from '../types/controller';
 
-class UserController {
-  async createUser(req: Request, res: Response) {
+const UserController = {
+  createUser: (async (req: Request, res: Response) => {
     try {
-      const password = hashSync(req.body.password, 10);
-      const user = await UserModel.createUser({
-        ...req.body,
-        password,
-      });
-      res.status(201).json(user);
+      const user = await UserModel.createUser(req.body);
+      const validatedUser = userResponseSchema.parse(user);
+
+      res.status(201).json(validatedUser);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async getUsers(req: Request, res: Response) {
+  getUsers: (async (req: Request, res: Response) => {
     try {
       const users = await UserModel.getUsers();
-      res.status(200).json(users);
+      const validatedUsers = usersResponseSchema.parse(users);
+
+      res.status(200).json(validatedUsers);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async getUserById(req: Request, res: Response) {
+  getUserById: (async (req: Request, res: Response) => {
     try {
       const user = await UserModel.getUserById(req.params.id);
-      res.status(200).json(user);
+
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+
+        return;
+      }
+      const validatedUser = userResponseSchema.parse(user);
+
+      res.status(200).json(validatedUser);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async updateUser(req: Request, res: Response) {
+  updateUser: (async (req: Request, res: Response) => {
     try {
       const user = await UserModel.updateUser(req.params.id, req.body);
-      res.status(200).json(user);
+      const validatedUser = userResponseSchema.parse(user);
+
+      res.status(200).json(validatedUser);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
-}
+  }) as ControllerFunction,
 
-export default new UserController();
+  deleteUser: (async (req: Request, res: Response) => {
+    try {
+      const user = await UserModel.deleteUser(req.params.id);
+      const validatedUser = userResponseSchema.parse(user);
+
+      res.status(200).json(validatedUser);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  }) as ControllerFunction,
+};
+
+export default UserController;

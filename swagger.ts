@@ -1,35 +1,38 @@
-import swaggerJsdoc from 'swagger-jsdoc';
+import { SwaggerOptions } from 'swagger-ui-express';
+import { SwaggerDefinition } from 'swagger-jsdoc';
 
-const options = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'API RNM',
-      version: '1.0.0',
-      description: 'Documentação da API do sistema RNM',
-    },
-    servers: [
-      {
-        url: 'http://localhost:3022',
-        description: 'Servidor de Desenvolvimento',
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
-    },
-    security: [{
-      bearerAuth: [],
-    }],
+const swaggerDefinition: SwaggerDefinition = {
+  openapi: '3.0.0',
+  info: {
+    title: 'RNM API Documentation',
+    version: '1.0.0',
+    description: 'API documentation for the RNM (Rede Nacional de Mercados) application',
   },
-  apis: ['./routes/*.ts'], // Caminho para os arquivos de rotas que contêm as anotações do Swagger
+  servers: [
+    {
+      url: 'http://localhost:3022',
+      description: 'Development server',
+    },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
+  },
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
 };
 
-const specs = swaggerJsdoc(options);
+const swaggerOptions: SwaggerOptions = {
+  swaggerDefinition,
+  apis: ['./routes/*.ts'], // Path to the API routes
+};
 
-export default specs;
+export default swaggerOptions;

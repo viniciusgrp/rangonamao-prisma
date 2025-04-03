@@ -1,5 +1,7 @@
-import { Router } from "express";
-import UserController from "../controllers/user.controller";
+import { Router } from 'express';
+import UserController from '../controllers/user.controller';
+import { validate } from '../middleware/validate';
+import { createUserSchema, updateUserSchema } from '../schemas/user.schema';
 
 const router = Router();
 
@@ -60,7 +62,7 @@ const router = Router();
  *       400:
  *         description: Dados inválidos
  */
-router.post("/", UserController.createUser)
+router.post('/', validate(createUserSchema), UserController.createUser);
 
 /**
  * @swagger
@@ -95,13 +97,13 @@ router.post("/", UserController.createUser)
  *                     type: string
  *                     format: date-time
  */
-router.get("/", UserController.getUsers)
+router.get('/', UserController.getUsers);
 
 /**
  * @swagger
  * /users/{id}:
  *   get:
- *     summary: Retorna um usuário específico
+ *     summary: Retorna um usuário pelo ID
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -114,7 +116,7 @@ router.get("/", UserController.getUsers)
  *         description: ID do usuário
  *     responses:
  *       200:
- *         description: Usuário encontrado
+ *         description: Usuário retornado com sucesso
  *         content:
  *           application/json:
  *             schema:
@@ -137,7 +139,7 @@ router.get("/", UserController.getUsers)
  *       404:
  *         description: Usuário não encontrado
  */
-router.get("/:id", UserController.getUserById)
+router.get('/:id', UserController.getUserById);
 
 /**
  * @swagger
@@ -171,10 +173,7 @@ router.get("/:id", UserController.getUserById)
  *               password:
  *                 type: string
  *                 format: password
- *                 description: Nova senha do usuário
- *               cpf:
- *                 type: string
- *                 description: CPF do usuário
+ *                 description: Senha do usuário
  *     responses:
  *       200:
  *         description: Usuário atualizado com sucesso
@@ -199,7 +198,9 @@ router.get("/:id", UserController.getUserById)
  *                   format: date-time
  *       404:
  *         description: Usuário não encontrado
+ *       400:
+ *         description: Dados inválidos
  */
-router.put("/:id", UserController.updateUser)
+router.put('/:id', validate(updateUserSchema), UserController.updateUser);
 
-export default router
+export default router;

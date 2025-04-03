@@ -53,5 +53,3 @@ const router = Router();
 router.post('/login', SessionController.createSession);
 
 export default router;
-
-

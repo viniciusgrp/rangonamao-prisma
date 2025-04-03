@@ -1,43 +1,69 @@
 import { Request, Response } from 'express';
-
 import StoreModel from '../models/store.models';
+import { storeResponseSchema, storesResponseSchema } from '../schemas/store.schema';
+import { ControllerFunction } from '../types/controller';
 
-class StoreController {
-  async createStore(req: Request, res: Response) {
+const StoreController = {
+  createStore: (async (req: Request, res: Response) => {
     try {
       const store = await StoreModel.createStore(req.body);
-      res.status(201).json(store);
+      const validatedStore = storeResponseSchema.parse(store);
+
+      res.status(201).json(validatedStore);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async getStores(req: Request, res: Response) {
+  getStores: (async (req: Request, res: Response) => {
     try {
       const stores = await StoreModel.getStores();
-      res.status(200).json(stores);
+      const validatedStores = storesResponseSchema.parse(stores);
+
+      res.status(200).json(validatedStores);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async getStoreById(req: Request, res: Response) {
+  getStoreById: (async (req: Request, res: Response) => {
     try {
       const store = await StoreModel.getStoreById(req.params.id);
-      res.status(200).json(store);
+
+      if (!store) {
+        res.status(404).json({ message: 'Store not found' });
+
+        return;
+      }
+      const validatedStore = storeResponseSchema.parse(store);
+
+      res.status(200).json(validatedStore);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async updateStore(req: Request, res: Response) {
+  updateStore: (async (req: Request, res: Response) => {
     try {
       const store = await StoreModel.updateStore(req.params.id, req.body);
-      res.status(200).json(store);
+      const validatedStore = storeResponseSchema.parse(store);
+
+      res.status(200).json(validatedStore);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
-}
+  }) as ControllerFunction,
 
-export default new StoreController();
+  deleteStore: (async (req: Request, res: Response) => {
+    try {
+      const store = await StoreModel.deleteStore(req.params.id);
+      const validatedStore = storeResponseSchema.parse(store);
+
+      res.status(200).json(validatedStore);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  }) as ControllerFunction,
+};
+
+export default StoreController;

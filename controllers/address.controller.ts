@@ -1,51 +1,67 @@
 import { Request, Response } from 'express';
-import AddressModel from '../models/address.model';
+import AddressModel from '../models/address.models';
+import { addressResponseSchema, addressesResponseSchema } from '../schemas/address.schema';
+import { ControllerFunction } from '../types/controller';
 
-class AddressController {
-  async createAddress(req: Request, res: Response) {
+const AddressController = {
+  createAddress: (async (req: Request, res: Response) => {
     try {
       const address = await AddressModel.createAddress(req.body);
-      res.status(201).json(address);
+      const validatedAddress = addressResponseSchema.parse(address);
+
+      res.status(201).json(validatedAddress);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async getAddresses(req: Request, res: Response) {
+  getAddresses: (async (req: Request, res: Response) => {
     try {
       const addresses = await AddressModel.getAddresses();
-      res.status(200).json(addresses);
+      const validatedAddresses = addressesResponseSchema.parse(addresses);
+
+      res.status(200).json(validatedAddresses);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async getAddressById(req: Request, res: Response) {
+  getAddressById: (async (req: Request, res: Response) => {
     try {
       const address = await AddressModel.getAddressById(req.params.id);
-      res.status(200).json(address);
+
+      if (!address) {
+        return res.status(404).json({ message: 'Address not found' });
+      }
+      const validatedAddress = addressResponseSchema.parse(address);
+
+      res.status(200).json(validatedAddress);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async updateAddress(req: Request, res: Response) {
+  updateAddress: (async (req: Request, res: Response) => {
     try {
       const address = await AddressModel.updateAddress(req.params.id, req.body);
-      res.status(200).json(address);
+      const validatedAddress = addressResponseSchema.parse(address);
+
+      res.status(200).json(validatedAddress);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
+  }) as ControllerFunction,
 
-  async deleteAddress(req: Request, res: Response) {
+  deleteAddress: (async (req: Request, res: Response) => {
     try {
       const address = await AddressModel.deleteAddress(req.params.id);
-      res.status(200).json(address);
+      const validatedAddress = addressResponseSchema.parse(address);
+
+      res.status(200).json(validatedAddress);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
-  }
-}
+  }) as ControllerFunction,
+};
 
-export default new AddressController();
+export default AddressController;

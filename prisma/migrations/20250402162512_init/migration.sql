@@ -56,7 +56,7 @@ CREATE TABLE "Category" (
     "description" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "storeUrl" TEXT NOT NULL,
+    "storeId" TEXT NOT NULL,
 
     CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
 );
@@ -88,11 +88,15 @@ CREATE TABLE "Order" (
 
 -- CreateTable
 CREATE TABLE "OrderProduct" (
+    "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "quantity" INTEGER NOT NULL DEFAULT 1,
+    "quantity" INTEGER NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "OrderProduct_pkey" PRIMARY KEY ("orderId","productId")
+    CONSTRAINT "OrderProduct_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -108,10 +112,13 @@ CREATE TABLE "Ingredient" (
 
 -- CreateTable
 CREATE TABLE "ProductIngredient" (
+    "id" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
     "ingredientId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "ProductIngredient_pkey" PRIMARY KEY ("productId","ingredientId")
+    CONSTRAINT "ProductIngredient_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -130,7 +137,7 @@ CREATE UNIQUE INDEX "Store_email_key" ON "Store"("email");
 ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Category" ADD CONSTRAINT "Category_storeUrl_fkey" FOREIGN KEY ("storeUrl") REFERENCES "Store"("url") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Category" ADD CONSTRAINT "Category_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "Store"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Product" ADD CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

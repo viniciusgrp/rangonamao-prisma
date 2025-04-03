@@ -9,4 +9,4 @@ export type MiddlewareFunction = (
 export interface AuthenticatedRequest extends Request {
   storeId?: string;
   userId?: string;
-} 
+}

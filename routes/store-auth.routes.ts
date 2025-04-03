@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import StoreSessionController from '../controllers/store-session.controller';
+import { login } from '../controllers/store-auth.controller';
 
 const router = Router();
 
@@ -50,6 +50,6 @@ const router = Router();
  *       401:
  *         description: Credenciais inválidas
  */
-router.post('/login', StoreSessionController.login);
+router.post('/login', login);
 
-export default router; 
+export default router;
